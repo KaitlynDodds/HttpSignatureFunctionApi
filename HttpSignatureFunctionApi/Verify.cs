@@ -14,19 +14,17 @@ namespace HttpSignatureFunctionApi
 {
     public static class Verify
     {
-        private static TraceWriter logger;
 
         [FunctionName("HttpTriggerCSharp")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]HttpRequestMessage req, TraceWriter log)
         {
-            logger = log;
-            logger.Info("C# HTTP trigger function processed a request.");
+            log.Info("HttpTriggerCSharp processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
             if (req.Headers.Authorization == null || !Signature.IsValidSignature(req.Headers.Authorization.Scheme, req.Headers.Authorization.Parameter))
             {
-                // send 401 Unauthorized if Request does not contain necessary headers + info
-                // specify which headers are expected in WW-Authenticate header 
+                log.Equals("Request object did not contain valid Authorization header.");
+                // return 401 Unauthorized
                 return Send401Response("Authorization Attempt Failed, Invalid Signature");
             }
 
@@ -55,21 +53,26 @@ namespace HttpSignatureFunctionApi
             // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
             if (signer.Verify(requestSignature))
             {
+                log.Info("Signature verification passed.");
                 // if true, signatures match, send back 200 OK
                 return req.CreateResponse(HttpStatusCode.OK, "Authorization Attempt Successful");
             }
             else
             {
+                log.Info("Signature verification failed.");
                 // if false, signatures did not match, send back error (401?)
                 return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
-            } 
-            
+            }
+
         }
-        
+
         private static HttpResponseMessage Send401Response(string message)
         {
+            // send 401 Unauthorized if Request does not contain necessary headers + info
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Unauthorized);
             response.ReasonPhrase = message;
+
+            // specify which headers are expected in WW-Authenticate header 
             response.Headers.WwwAuthenticate.Add(new AuthenticationHeaderValue("Signature", "headers=\"(request-target) date digest\""));
             return response;
         }
