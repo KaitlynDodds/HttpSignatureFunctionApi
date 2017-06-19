@@ -16,14 +16,14 @@ namespace HttpSignatureFunctionApi
     {
 
         [FunctionName("HttpTriggerCSharp")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequestMessage req, TraceWriter log)
         {
             log.Info("HttpTriggerCSharp processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
             if (req.Headers.Authorization == null || !Signature.IsValidSignature(req.Headers.Authorization.Scheme, req.Headers.Authorization.Parameter))
             {
-                log.Equals("Request object did not contain valid Authorization header.");
+                log.Info("Request object did not contain valid Authorization header.");
                 // return 401 Unauthorized
                 return Send401Response("Authorization Attempt Failed, Invalid Signature");
             }
@@ -55,7 +55,7 @@ namespace HttpSignatureFunctionApi
             {
                 log.Info("Signature verification passed.");
                 // if true, signatures match, send back 200 OK
-                return req.CreateResponse(HttpStatusCode.OK, "Authorization Attempt Successful");
+                return Send200Response("Signature Verification Succesfull");
             }
             else
             {
@@ -71,9 +71,20 @@ namespace HttpSignatureFunctionApi
             // send 401 Unauthorized if Request does not contain necessary headers + info
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Unauthorized);
             response.ReasonPhrase = message;
+            response.Content = new StringContent("{\"active\":\"false\"}", System.Text.Encoding.UTF8, "application/json");
 
             // specify which headers are expected in WW-Authenticate header 
             response.Headers.WwwAuthenticate.Add(new AuthenticationHeaderValue("Signature", "headers=\"(request-target) date digest\""));
+            return response;
+        }
+
+        private static HttpResponseMessage Send200Response(string message)
+        {
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.ReasonPhrase = message;
+            // indicate that verification has been successful in response content (as JSON object w/ active var)
+            response.Content = new StringContent("{\"active\":\"true\"}", System.Text.Encoding.UTF8, "application/json");
+
             return response;
         }
     }
