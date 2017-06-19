@@ -29,30 +29,14 @@ namespace HttpSignatureFunctionApi
             }
 
             // Step 2) Verify Signature 
-
-            // a) Parse HttpResponseMessage to generate a Request object 
-            Request request = Parser.ParseRequestFromHttpRequestMessage(req);
-            log.Info(request.Path);
-
-            // b) Parse Authorization header 
-            Dictionary<string, List<string>> parsedAuthenticationHeaders = Parser.ParseAuthorizationHeader(req.Headers.Authorization);
-            // keyId
-            string keyId = parsedAuthenticationHeaders["keyId"][0];
-            // algorithm
-            string algorithm = parsedAuthenticationHeaders["algorithm"][0];
-            // Signature (encoded value) 
-            string requestSignature = parsedAuthenticationHeaders["signature"][0];
-            // all the headers used to sign the original signature 
-            List<string> origHeaders = parsedAuthenticationHeaders["headers"];
-
-            // c) Create new Signature object with keyId, algorithm and Request object
-            Signature signature = new Signature(keyId, algorithm, request);
+            Signature signature = Signature.FromHttpRequest(req);
+            string originalRequestSignature = signature.EncodedSignature;
 
             // d) Create new Signer object with Signature object
             Signer signer = new Signer(signature);
 
             // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
-            if (signer.Verify(requestSignature))
+            if (signer.Verify(originalRequestSignature))
             {
                 log.Info("Signature verification passed.");
                 // if true, signatures match, send back 200 OK
@@ -61,7 +45,7 @@ namespace HttpSignatureFunctionApi
             else
             {
                 log.Info("Signature verification failed.");
-                log.Info(String.Format("{0} : {1}", requestSignature, signature.EncodedSignature));
+                log.Info(String.Format("{0} : {1}", originalRequestSignature, signature.EncodedSignature));
                 // if false, signatures did not match, send back error (401?)
                 return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
             }
