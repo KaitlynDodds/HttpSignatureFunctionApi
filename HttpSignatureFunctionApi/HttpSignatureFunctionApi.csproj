@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="2.1.0-beta1" />
@@ -11,6 +11,9 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.0-alpha3" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="HttpSignatureClassLibrary">
+      <HintPath>..\..\..\..\Source\Repos\HttpSignatureClassLibrary\HttpSignatureClassLibrary\bin\Debug\HttpSignatureClassLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
@@ -20,5 +23,10 @@
     <None Update="local.settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System">
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
   </ItemGroup>
 </Project>
