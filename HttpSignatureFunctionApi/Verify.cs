@@ -32,6 +32,7 @@ namespace HttpSignatureFunctionApi
 
             // a) Parse HttpResponseMessage to generate a Request object 
             Request request = Parser.ParseRequestFromHttpRequestMessage(req);
+            log.Info(request.Path);
 
             // b) Parse Authorization header 
             Dictionary<string, List<string>> parsedAuthenticationHeaders = Parser.ParseAuthorizationHeader(req.Headers.Authorization);
@@ -60,6 +61,7 @@ namespace HttpSignatureFunctionApi
             else
             {
                 log.Info("Signature verification failed.");
+                log.Info(String.Format("{0} : {1}", requestSignature, signature.EncodedSignature));
                 // if false, signatures did not match, send back error (401?)
                 return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
             }
