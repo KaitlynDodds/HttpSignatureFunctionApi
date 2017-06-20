@@ -15,7 +15,7 @@ namespace HttpSignatureFunctionApi
     public static class Verify
     {
 
-        [FunctionName("HttpTriggerCSharp")]
+        [FunctionName("HttpSignatureVerificationWorker")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequestMessage req, TraceWriter log)
         {
             log.Info("HttpTriggerCSharp processed request");
