@@ -24,8 +24,7 @@ namespace HttpSignatureFunctionApi
             if (req.Headers.Authorization == null || Parser.IsValidAuthenticationHeader(req.Headers.Authorization))
             {
                 log.Info("Request object did not contain valid Authorization header.");
-                // return 401 Unauthorized
-                return Send401Response("Authorization Attempt Failed, Invalid Signature");
+                return Send401Response("Authorization Attempt Failed, Invalid Authorization Header");
             }
 
             // Step 2) Verify Signature 
@@ -39,14 +38,11 @@ namespace HttpSignatureFunctionApi
             if (signer.Verify(originalRequestSignature))
             {
                 log.Info("Signature verification passed.");
-                // if true, signatures match, send back 200 OK
                 return Send200Response("Signature Verification Succesfull");
             }
             else
             {
                 log.Info("Signature verification failed.");
-                log.Info(String.Format("{0} : {1}", originalRequestSignature, signature.EncodedSignature));
-                // if false, signatures did not match, send back error (401?)
                 return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
             }
 
@@ -57,10 +53,12 @@ namespace HttpSignatureFunctionApi
             // send 401 Unauthorized if Request does not contain necessary headers + info
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Unauthorized);
             response.ReasonPhrase = message;
-            response.Content = new StringContent("{\"active\":\"false\"}", System.Text.Encoding.UTF8, "application/json");
 
-            // specify which headers are expected in WW-Authenticate header 
-            response.Headers.WwwAuthenticate.Add(new AuthenticationHeaderValue("Signature", "headers=\"(request-target) date digest\""));
+            // indicate that varification failed in response content (as JSON object w/ value 'verified')
+            response.Content = new StringContent("{\"verified\":\"false\"}", System.Text.Encoding.UTF8, "application/json");
+
+            // specify which headers are expected in WWW-Authenticate header 
+            response.Headers.WwwAuthenticate.Add(new AuthenticationHeaderValue("Signature", "headers=\"date digest\""));
             return response;
         }
 
@@ -68,8 +66,8 @@ namespace HttpSignatureFunctionApi
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.ReasonPhrase = message;
-            // indicate that verification has been successful in response content (as JSON object w/ active var)
-            response.Content = new StringContent("{\"active\":\"true\"}", System.Text.Encoding.UTF8, "application/json");
+            // indicate that verification has been successful in response content (as JSON object w/ value 'verified')
+            response.Content = new StringContent("{\"verified\":\"true\"}", System.Text.Encoding.UTF8, "application/json");
 
             return response;
         }
