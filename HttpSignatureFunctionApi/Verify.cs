@@ -21,7 +21,7 @@ namespace HttpSignatureFunctionApi
             log.Info("HttpTriggerCSharp processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
-            if (req.Headers.Authorization == null || !Signature.IsValidSignature(req.Headers.Authorization.Scheme, req.Headers.Authorization.Parameter))
+            if (req.Headers.Authorization == null || Parser.IsValidAuthenticationHeader(req.Headers.Authorization))
             {
                 log.Info("Request object did not contain valid Authorization header.");
                 // return 401 Unauthorized
