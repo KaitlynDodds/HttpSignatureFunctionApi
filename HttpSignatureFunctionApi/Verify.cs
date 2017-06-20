@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using http.signature;
 using System;
 using System.Collections.Generic;
+using http.signature.Exceptions;
 
 namespace HttpSignatureFunctionApi
 {
@@ -21,31 +22,50 @@ namespace HttpSignatureFunctionApi
             log.Info("HttpTriggerCSharp processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
-            if (req.Headers.Authorization == null || Parser.IsValidAuthenticationHeader(req.Headers.Authorization))
+            if (req.Headers.Authorization == null)
             {
-                log.Info("Request object did not contain valid Authorization header.");
-                return Send401Response("Authorization Attempt Failed, Invalid Authorization Header");
+                log.Info("Request object did not contain an Authorization Header");
+                return Send401Response("Authorization Attempt Failed, No Authorization Header");
             }
 
-            // Step 2) Verify Signature 
-            Signature signature = Signature.FromHttpRequest(req);
-            string originalRequestSignature = signature.EncodedSignature;
-
-            // d) Create new Signer object with Signature object
-            Signer signer = new Signer(signature);
-
-            // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
-            if (signer.Verify(originalRequestSignature))
+            try
             {
-                log.Info("Signature verification passed.");
-                return Send200Response("Signature Verification Succesfull");
-            }
-            else
-            {
-                log.Info("Signature verification failed.");
-                return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
-            }
+                // Step 2) Verify Signature 
+                Signature signature = Signature.FromHttpRequest(req);
+                string originalRequestSignature = signature.EncodedSignature;
 
+                // d) Create new Signer object with Signature object
+                Signer signer = new Signer(signature);
+
+                // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
+                if (signer.Verify(originalRequestSignature))
+                {
+                    log.Info("Signature verification passed.");
+                    return Send200Response("Signature Verification Succesfull");
+                }
+                else
+                {
+                    log.Info("Signature verification failed.");
+                    return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
+                }
+            }
+            catch (InvalidSignatureString ex)
+            {
+                log.Error("Invalid Signature String", ex);
+                return Send401Response("Signature string could not be used, was invalid");
+            }
+            catch (InvalidAuthorizationHeader ex)
+            {
+                log.Error("Invalid Authorization Header", ex);
+                return Send401Response("Invalid Authorization Header");
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error Occured", ex);
+                return Send401Response("Error Occured");
+            }
+            
+            
         }
 
         private static HttpResponseMessage Send401Response(string message)
