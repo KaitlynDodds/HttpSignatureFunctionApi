@@ -20,7 +20,7 @@ namespace HttpSignatureFunctionApi
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "HttpSignature/verify")]HttpRequestMessage req, TraceWriter log)
         {
             // add route**
-            log.Info("HttpTriggerCSharp processed request");
+            log.Info("HttpSignatureVerificaion processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
             if (req.Headers.Authorization == null)
@@ -33,12 +33,16 @@ namespace HttpSignatureFunctionApi
             {
                 // Step 2) Verify Signature 
                 Signature signature = Signature.FromHttpRequest(req);
+                log.Info("Created signature from Http request");
                 string originalRequestSignature = signature.EncodedSignature;
+                log.Info($"Request signature passed into function: {originalRequestSignature}");
 
                 // d) Create new Signer object with Signature object
                 Signer signer = new Signer(signature);
+                log.Info("Created signer instance with signature");
 
                 // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
+                log.Info("Calling verify on signer");
                 if (signer.Verify(originalRequestSignature))
                 {
                     log.Info("Signature verification passed.");
