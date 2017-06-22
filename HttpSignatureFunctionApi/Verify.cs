@@ -56,6 +56,11 @@ namespace HttpSignatureFunctionApi
                     return Send401Response("Authorization Attempt Failed, Signature Verification Failed");
                 }
             }
+            catch (InvalidAlgorithmException ex)
+            {
+                logger.Error("Invalid Algorithm", ex);
+                return Send401Response("Algorithm could not be identified, verification failed.");
+            }
             catch (InvalidSignatureString ex)
             {
                 logger.Error("Invalid Signature String", ex);
