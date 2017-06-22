@@ -17,8 +17,9 @@ namespace HttpSignatureFunctionApi
     {
 
         [FunctionName("HttpSignatureVerificationWorker")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "HttpSignature/verify")]HttpRequestMessage req, TraceWriter log)
         {
+            // add route**
             log.Info("HttpTriggerCSharp processed request");
 
             // Step 1) Check that HTTPRequest Message contains Authorization header 
