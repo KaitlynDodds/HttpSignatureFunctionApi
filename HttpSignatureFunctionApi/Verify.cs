@@ -39,11 +39,11 @@ namespace HttpSignatureFunctionApi
                 string originalRequestSignature = signature.EncodedSignature;
                 logger.Info($"Request signature passed into function: {originalRequestSignature}");
 
-                // d) Create new Signer object with Signature object
+                // Create new Signer object with Signature object
                 Signer signer = new Signer(signature);
                 logger.Info("Created signer instance with signature");
 
-                // e) Call signer.Verify() given the encoded signature you received in the original HTTP request 
+                // Call signer.Verify() given the encoded signature you received in the original HTTP request 
                 logger.Info("Calling verify on signer");
                 if (signer.Verify(originalRequestSignature))
                 {
@@ -95,6 +95,7 @@ namespace HttpSignatureFunctionApi
 
         private static HttpResponseMessage Send200Response(string message)
         {
+            // send back 200 if all went well
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.ReasonPhrase = message;
 
